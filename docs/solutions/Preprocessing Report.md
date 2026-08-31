@@ -8,9 +8,9 @@
 
 This PS isn't just "detect oil on a SAR image" - the end goal is **attribution**: working out which vessel caused a given spill. That's what makes age estimation a required capability, not a nice-to-have
 
-- Attribution works by taking a detected slick and asking "which vessel was at the origin point, at the origin time?" - but a satellite only tells you where the oil _is now_, not where or when it was _discharged_.
+- Attribution works by taking a detected slick and asking "which vessel was at the origin point, at the origin time?" - but a satellite only tells us where the oil _is now_, not where or when it was _discharged_.
 - **Age is the missing link between "detected now" and "discharged then."** Without an age estimate (even a coarse bucket like "fresh, <3h" or "weathered, 12–48h"), we have no principled way to set the time window for the backward drift/hindcast model, and therefore no principled way to bound which AIS vessel tracks are even relevant candidates.
-- A wrong or missing age estimate doesn't just lose you accuracy - it can eliminate the true polluter from consideration entirely (if your search window is too short) or return an unusably large, low-confidence suspect list (if it's too wide, or absent so you have to guess a window).
+- A wrong or missing age estimate doesn't just lose us accuracy - it can eliminate the true polluter from consideration entirely (if our search window is too short) or return an unusably large, low-confidence suspect list (if it's too wide, or absent so we have to guess a window).
 - This is why age/weathering-stage estimation sits directly upstream of the vessel-attribution/scoring stage in the architecture - it is a **prerequisite input** to the drift-hindcast step, not a separate side-feature.
 
 Given this, age estimation should be scoped deliberately (see the report's companion note on Approach 1 vs. Approach 2, and the Tier 1/2/3 staging) rather than skipped - even a coarse, uncertainty-bounded estimate meaningfully tightens the vessel search space, which is the actual deliverable this PS is scored on.
@@ -22,7 +22,7 @@ The model has two jobs that need different inputs, so the preprocessing has to b
 - **Stage 1 (detection/segmentation):** "Is this dark patch on the SAR image oil-shaped or not?" - this only ever looks at pixels.
 - **Stage 2 (discrimination):** "Given that it's dark and oil-shaped, is it actually oil, or a look-alike (calm wind zone, biogenic film, internal wave, rain cell, etc.)?" - this is where wind, sea temperature, and other ocean context earn their keep, because several look-alikes are _literally defined_ by ocean conditions.
 
-Keeping these separate matters because if you mix ocean data into Stage 1, you're forcing a pixel-level model to depend on data it doesn't need, which adds noise and failure points for no benefit - the DARTIS_2019 authors themselves trained their baseline detector on images only.
+Keeping these separate matters because if we mix ocean data into Stage 1, we're forcing a pixel-level model to depend on data it doesn't need, which adds noise and failure points for no benefit - the DARTIS_2019 authors themselves trained their baseline detector on images only.
 
 We also want to be explicit about one thing: wind and oceanographic data are not needed to train the detector itself, but they are still necessary for the harder part of the problem. The published DARTIS_2019 dataset ships image patches and object annotations, but it does not attach wind speed, SST, or ocean covariates to each patch. That means a Tier-1 detection model can be trained entirely on image pixels and still perform the basic dark-spot detection task. However, once we move beyond raw detection, the real ambiguity begins: a dark patch can be oil, or it can be a low-wind calm zone, a biogenic film, an internal wave, an upwelling front, or a rain cell. Several of these look-alikes are defined by local wind and ocean conditions, so Stage 2 needs wind, SST, chlorophyll-a, and related context to tell real oil apart from physically similar false positives. In other words, oceanographic data are not required for the image-model training step, but they are essential for the second-stage discrimination and attribution layer that makes the system operationally useful.
 
@@ -39,9 +39,9 @@ This is the pipeline the DARTIS_2019 paper itself uses (ESA SNAP Graph Processin
 ### Step 2.2 - Thermal noise removal
 
 **What:** Subtract the sensor's own internal electronic noise floor from the signal.  
-**Why:** Radar receivers add a baseline hum of noise on top of the real backscatter signal. Oil spills show up as _low_ backscatter (dark patches), so if you don't remove this noise floor, the low-backscatter regions get artificially "brightened" by residual noise and can look less oil-like than they are - hurting detection of thin/old slicks especially.  
+**Why:** Radar receivers add a baseline hum of noise on top of the real backscatter signal. Oil spills show up as _low_ backscatter (dark patches), so if we don't remove this noise floor, the low-backscatter regions get artificially "brightened" by residual noise and can look less oil-like than they are - hurting detection of thin/old slicks especially.  
 **When:** Immediately after border removal, still on the raw digital-number image.  
-**Known caveat:** SNAP v8 introduces small circular artifacts in low-backscatter areas during this step. The dataset authors chose to keep affected patches rather than discard them (for a more realistic noise profile) - worth being aware of if your model shows odd circular false positives.
+**Known caveat:** SNAP v8 introduces small circular artifacts in low-backscatter areas during this step. The dataset authors chose to keep affected patches rather than discard them (for a more realistic noise profile) - worth being aware of if our model shows odd circular false positives.
 
 ### Step 2.3 - Radiometric calibration
 
@@ -67,7 +67,7 @@ These aren't unique to oil spill detection, but they're necessary regardless of 
 
 ### Step 3.1 - Annotation format conversion
 
-**What:** DARTIS_2019 ships Pascal VOC XML bounding boxes. Convert to whatever format your model architecture expects (e.g. YOLO .txt format via the dataset's own toolbox scripts, or COCO JSON for other frameworks).  
+**What:** DARTIS_2019 ships Pascal VOC XML bounding boxes. Convert to whatever format our model architecture expects (e.g. YOLO .txt format via the dataset's own toolbox scripts, or COCO JSON for other frameworks).  
 **Why:** Every detection framework expects a specific annotation schema; mismatches cause silent training failures or garbage results, not clean errors.
 
 ### Step 3.2 - Land masking
@@ -78,12 +78,12 @@ These aren't unique to oil spill detection, but they're necessary regardless of 
 ### Step 3.3 - Train/validation/test split
 
 **What:** Split patches so the same underlying SAR scene never appears in both train and test sets.  
-**Why:** If patches cropped from the same original scene end up split across train and test, the model can "cheat" by memorizing scene-specific artifacts (sensor noise pattern, specific coastline shape) rather than learning general oil-vs-not features - inflating your reported accuracy without it being real.
+**Why:** If patches cropped from the same original scene end up split across train and test, the model can "cheat" by memorizing scene-specific artifacts (sensor noise pattern, specific coastline shape) rather than learning general oil-vs-not features - inflating our reported accuracy without it being real.
 
 ### Step 3.4 - Class balance handling
 
 **What:** Check the oil vs. no-oil (look-alike) patch ratio; apply oversampling, undersampling, or weighted loss if it's skewed.  
-**Why:** DARTIS_2019 is close to balanced (1,365 oil-set vs 2,990 no-oil-set patches, roughly 1:2), but within the oil-set, the look-alike sub-categories (from the paper's K-means clustering) may be unevenly represented - if you're doing fine-grained look-alike classification later (Stage 2), check that sub-balance too.
+**Why:** DARTIS_2019 is close to balanced (1,365 oil-set vs 2,990 no-oil-set patches, roughly 1:2), but within the oil-set, the look-alike sub-categories (from the paper's K-means clustering) may be unevenly represented - if we're doing fine-grained look-alike classification later (Stage 2), check that sub-balance too.
 
 ### Step 3.5 - Data augmentation
 
@@ -97,7 +97,7 @@ This runs _in addition to_ Stage 1's pipeline, and only feeds the look-alike dis
 ### Step 4.1 - Build a lookup key per patch
 
 **What:** For every patch, extract (latitude, longitude, acquisition timestamp) from the DARTIS_2019 metadata table.  
-**Why:** This is the join key that lets you attach external ocean data to a patch that otherwise has none.
+**Why:** This is the join key that lets us attach external ocean data to a patch that otherwise has none.
 
 ### Step 4.2 - Query gridded ocean data sources by space + time
 
@@ -114,7 +114,7 @@ This runs _in addition to_ Stage 1's pipeline, and only feeds the look-alike dis
 
 All six are free (Copernicus/GEBCO/EMODnet open licences), fully cover 2019, and can be queried by (lat, lon, timestamp) - no gap-filling or substitution needed for this specific dataset window.
 
-**Why this specific stack:** it isn't a generic "any wind/SST source will do" choice - MED DOISST's hourly SST record only starts 1 Jan 2019, which happens to align exactly with the DARTIS_2019 window, and MEDSEA's hourly currents are the same forcing already used by validated regional oil-spill models (MEDSLIK-II) - so using it here keeps you consistent with the reference literature rather than introducing an unvalidated data source.
+**Why this specific stack:** it isn't a generic "any wind/SST source will do" choice - MED DOISST's hourly SST record only starts 1 Jan 2019, which happens to align exactly with the DARTIS_2019 window, and MEDSEA's hourly currents are the same forcing already used by validated regional oil-spill models (MEDSLIK-II) - so using it here keeps us consistent with the reference literature rather than introducing an unvalidated data source.
 
 ### Step 4.3 - Set a time-matching tolerance per variable
 
@@ -129,7 +129,7 @@ All six are free (Copernicus/GEBCO/EMODnet open licences), fully cover 2019, and
 ### Step 4.5 - Handle missing lookups explicitly
 
 **What:** Flag (don't silently drop) patches where a given data source doesn't cover that location/time - e.g. chlorophyll-a's 1 km Med L3 product has real cloud gaps (it's observation-only, not gap-filled), unlike the 4 km global L4 which is interpolation-filled.  
-**Why:** Coastal areas are exactly where a lot of look-alikes (biogenic films, upwelling fronts) occur, so silently dropping rows with missing ocean data would bias your training set away from the hardest, most useful examples. If you use the L4 chlorophyll product to avoid gaps, flag those cells as "interpolated" rather than treating them as real observations.
+**Why:** Coastal areas are exactly where a lot of look-alikes (biogenic films, upwelling fronts) occur, so silently dropping rows with missing ocean data would bias our training set away from the hardest, most useful examples. If we use the L4 chlorophyll product to avoid gaps, flag those cells as "interpolated" rather than treating them as real observations.
 
 ### Step 4.6 - Scale/normalize ocean features before feeding the classifier
 
@@ -139,7 +139,7 @@ All six are free (Copernicus/GEBCO/EMODnet open licences), fully cover 2019, and
 ### Step 4.7 - Recommended Python tooling
 
 **What:** copernicusmarine (Copernicus Marine Toolbox) for SST/chl-a/currents/waves, cdsapi for ERA5 wind, xarray+netCDF4/dask to handle the NetCDF grids, scipy.spatial.cKDTree for fast nearest-neighbour (lat, lon) matching across thousands of patches, and rioxarray/pygmt grdtrack for sampling the bathymetry rasters at points.  
-**Why:** These match the actual services each data provider exposes - copernicusmarine's arco-time-series service in particular pulls a point time series far more efficiently than downloading a full bounding-box file per patch, which matters once you're enriching thousands of DARTIS_2019 patches rather than a handful.  
+**Why:** These match the actual services each data provider exposes - copernicusmarine's arco-time-series service in particular pulls a point time series far more efficiently than downloading a full bounding-box file per patch, which matters once we're enriching thousands of DARTIS_2019 patches rather than a handful.  
 **Practical recipe:** subset all six products once over the full Eastern Med bounding box × 2019 into local NetCDFs, build one cKDTree per grid, then extract each variable at each patch's cell (bathymetry matched once per patch since it's static). Cache the result as a Parquet table rather than re-querying per patch.
 
 ## 5\. Summary table
@@ -165,17 +165,17 @@ All six are free (Copernicus/GEBCO/EMODnet open licences), fully cover 2019, and
 
 ## 6\. Existing tools/resources relevant to oil spill age estimation
 
-There is no off-the-shelf tool that outputs "age in hours" directly from one SAR image - this isn't a solved, packaged problem. But the following existing tools give you the physics/engine you'd wire an age-estimation layer around, rather than deriving everything from scratch:
+There is no off-the-shelf tool that outputs "age in hours" directly from one SAR image - this isn't a solved, packaged problem. But the following existing tools give us the physics/engine we'd wire an age-estimation layer around, rather than deriving everything from scratch:
 
 - **NOAA GNOME / PyGNOME / ADIOS** - open-source (GitHub) Lagrangian drift-and-weathering suite. GNOME's own workflow already includes running the model _backward_ from a known slick to estimate a likely origin time/location - this is the closest existing tool to a ready-made "age via hindcast" engine (Approach 2's core logic). ADIOS additionally supplies real oil-property data (density, viscosity, distillation curves) needed to make the Fay-spreading/weathering fit realistic rather than generic.
 - **OpenDrift / OpenOil (MET Norway)** - same category as GNOME: a generic Lagrangian trajectory framework with an oil-specific module (evaporation, emulsification) that can ingest Copernicus Marine current/wind forcing directly. Good alternative/complement engine for building the hindcast-fitting step in Approach 2.
 - **Seatrack Web (SMHI)** - an operational Baltic-Sea tool that already implements the classic "backward-drift the slick, then check which vessel's AIS track intersects the backtracked position" workflow - worth studying as a template, though it's Baltic-tuned, not open for direct reuse.
 - **SkyTruth Cerulean / Global Fishing Watch Skylight** - doesn't estimate age explicitly, but its "Source Profiles" ranking (top-3 probable vessels per slick, using AIS-off-event history) is evidence of how far a production system pushes the detection→attribution link without solving age estimation outright - a useful benchmark for what's currently considered "good enough" in a deployed tool.
-- **ESA SNAP Oil Spill Detection operator** - gives you the calibrated dark-spot polygon and area/shape features (a prerequisite input for any age-inversion approach), but doesn't do age estimation itself.
-- **Bonn Agreement Oil Appearance Code (BAOAC)** - not software, but a standardized visual/optical classification (silver sheen → rainbow → brown/black → dark brown mousse) used operationally to bucket weathering _stage_ from appearance. Useful as a coarse, literature-grounded target/label scheme if you want to frame age estimation as a classification problem (weathering class) rather than a regression problem (exact hours).
-- **Published backtracking-uncertainty studies** (e.g. Janeiro et al. 2017, validated against real satellite-tracked drifter buoys) - not a tool, but the source for realistic error bounds on "how far back can you trust a hindcast" - important for stating your age/origin-time uncertainty honestly rather than presenting a false-precision number.
+- **ESA SNAP Oil Spill Detection operator** - gives us the calibrated dark-spot polygon and area/shape features (a prerequisite input for any age-inversion approach), but doesn't do age estimation itself.
+- **Bonn Agreement Oil Appearance Code (BAOAC)** - not software, but a standardized visual/optical classification (silver sheen → rainbow → brown/black → dark brown mousse) used operationally to bucket weathering _stage_ from appearance. Useful as a coarse, literature-grounded target/label scheme if we want to frame age estimation as a classification problem (weathering class) rather than a regression problem (exact hours).
+- **Published backtracking-uncertainty studies** (e.g. Janeiro et al. 2017, validated against real satellite-tracked drifter buoys) - not a tool, but the source for realistic error bounds on "how far back can we trust a hindcast" - important for stating our age/origin-time uncertainty honestly rather than presenting a false-precision number.
 
-**Bottom line:** treat age estimation as something you build on top of an existing drift/weathering engine (GNOME or OpenDrift), not something you find pre-packaged - no current public tool ships a standalone "input SAR image(s), output spill age" function.
+**Bottom line:** treat age estimation as something we build on top of an existing drift/weathering engine (GNOME or OpenDrift), not something we find pre-packaged - no current public tool ships a standalone "input SAR image(s), output spill age" function.
 
 ### 6.1 Oil-spill age estimation: what we can and cannot measure from a single SAR image
 
@@ -337,4 +337,4 @@ This is the level of rigor that matches the available data and still meaningfull
 
 Stage 1 needs nothing but a clean, correctly calibrated, correctly normalized SAR image - get that right and DARTIS_2019 trains a working baseline detector as-is.
 
-Stage 2 is where the real differentiation lives: enriching patches with wind/SST/chlorophyll-a/bathymetry turns a plain image classifier into one that can actually distinguish oil from the many physically similar things that aren't oil - which is the harder, higher-value problem, and the one your dossier's gap analysis already flags as the differentiator worth building.
+Stage 2 is where the real differentiation lives: enriching patches with wind/SST/chlorophyll-a/bathymetry turns a plain image classifier into one that can actually distinguish oil from the many physically similar things that aren't oil - which is the harder, higher-value problem, and the one our dossier's gap analysis already flags as the differentiator worth building.
