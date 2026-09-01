@@ -156,4 +156,4 @@ A basic detector only needs clean images - that's Stage 1. But two things make o
 
 ---
 
-For a more detailed explanation of preprocessing Workflow, please refer to the [Detailed Preprocessing Report.md](Detailed%20Preprocessing%20Report.md).
+For a more detailed explanation of preprocessing Workflow, please refer to the [Detailed Preprocessing Report.md](Preprocessing%20Report.md).
