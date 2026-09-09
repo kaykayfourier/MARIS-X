@@ -9,7 +9,7 @@ This is the full pipeline from raw Sentinel-1 download through to a georeference
 
 ---
 
-## Stage 0 - Data ingestion
+## Stage 0 - Data ingestion (if we are making our system Indian specific)
 
 > **Note - this is not training data.** DARTIS (used in Stage 3) is a fixed, one-time-downloaded training/validation dataset covering the Eastern Mediterranean. Stage 0 is a completely separate, continuously-running data stream: it pulls *live* Sentinel-1 scenes over the actual area we're monitoring (the Indian coastline). Training teaches the model/rules what oil looks like; Stage 0 is what feeds the trained/tuned pipeline the real scenes it needs to check. Skipping Stage 0 means having a working detector with nothing to run it on - DARTIS never touches Indian waters.
 
