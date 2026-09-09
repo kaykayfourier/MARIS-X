@@ -3,7 +3,7 @@
 **Sources this document consolidates:**
 - Our existing `Preprocessing_Report.md` (Stage 1 image pipeline + Stage 2 oceanographic enrichment + age estimation)
 - Yang, Singha & Goldman (2024), *"A near real-time automated oil spill detection and early warning system using Sentinel-1 SAR imagery for the Southeastern Mediterranean Sea"*, Int. J. Remote Sensing 45(6):1997–2027 - referred to below as **"the paper"**
-- Our team's own recommended mask-generation approach (Option 1: rule-based dark-pixel segmentation; Option 2: manual annotation as validation/bonus)
+- My own recommended mask-generation approach (Option 1: rule-based dark-pixel segmentation; Option 2: manual annotation as validation/bonus)
 
 This is the full pipeline from raw Sentinel-1 download through to a georeferenced polygon and (eventually) vessel attribution - every stage, in order, with what to do and why.
 
@@ -60,7 +60,7 @@ This is the ellipsoidal approximation - good enough for open water; full DEM-bas
 
 ---
 
-## Stage 3 - Training the object detector
+## Stage 3 - Training the object detector (Optional as per my recommended approach)
 
 > **Data source for this stage: DARTIS only.** This is the one stage in the whole pipeline that uses DARTIS. Everything from Stage 4 onward runs on Stage 0's live Indian-coast scenes, not on DARTIS.
 
@@ -89,15 +89,15 @@ This is the ellipsoidal approximation - good enough for open water; full DEM-bas
 
 ## Stage 5 - Mask and polygon generation (the core problem this document is solving)
 
-This is where the team's recommended approach and the paper's own method converge - **they are the same idea**. The paper doesn't train a U-Net either; it uses a rule-based, no-training segmentation step to turn boxes into masks (Section 2.3.2). This validates going with **Option 1** as the primary approach.
+This is where the my recommended approach and the paper's own method converge - **they are the same idea**. The paper doesn't train a U-Net either; it uses a rule-based, no-training segmentation step to turn boxes into masks (Section 2.3.2). This validates going with **Option 1** as the primary approach.
 
 ### Option 1 (PRIMARY): Rule-based dark-pixel segmentation - no training required
 
-**Core idea (team's framing):** look inside the box, find pixels darker than the surrounding water, group the connected dark pixels - "the magic wand tool," not a trained model.
+**Core idea (our framing):** look inside the box, find pixels darker than the surrounding water, group the connected dark pixels - "the magic wand tool," not a trained model.
 
 **Step-by-step (combining the paper's method with the team's proposed safeguards):**
 
-1. **Define the ROI.** Take the detection box (from DARTIS or your own detector) and expand it by a **small margin only - 10–20%** (team's recommendation; keeps unrelated dark areas out of the ROI, unlike a large blind expansion).
+1. **Define the ROI.** Take the detection box (from DARTIS or your own detector) and expand it by a **small margin only - 10–20%** (my recommendation; keeps unrelated dark areas out of the ROI, unlike a large blind expansion).
 2. **Speckle-reduce the ROI** with a median filter (5×5 to 10×10px depending on ROI size) - this is standard SAR denoising, matches both the paper's approach and our own Sentinel-1 notebook's speckle-smoothing step.
 3. **Remove bright outliers using CFAR** (Constant False Alarm Rate): compare each pixel to the mean/std of a surrounding background ring; anything abnormally bright (ships, land edges) gets masked and replaced with the local average so it doesn't interfere with the next step.
 4. **Compute local discontinuity** via the power-to-mean ratio (σ/μ) - this reveals the boundary between the smoother oil-damped surface and the rougher open water.
