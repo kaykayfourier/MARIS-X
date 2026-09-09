@@ -44,7 +44,7 @@ This is the ellipsoidal approximation - good enough for open water; full DEM-bas
 
 ---
 
-## Stage 2 - Standard ML-pipeline steps (dataset preparation)
+## Stage 2 - Standard ML-pipeline steps (dataset preparation for YOLO training)
 
 *Also from our existing report - these apply regardless of dataset.*
 
