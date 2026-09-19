@@ -13,6 +13,7 @@ __pycache__/
 
 # Data files (satellite imagery, AIS data — too large for git)
 data/
+# Standalone files outside the data folder in case
 *.tif
 *.tiff
 *.nc
