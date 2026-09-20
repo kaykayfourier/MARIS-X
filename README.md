@@ -1,4 +1,4 @@
-# MarineEye: Leveraging satellite imagery to determine Oil spills at sea along with AIS data correlations to identify vessel responsible for the spill.
+# MARIS-X: Leveraging satellite imagery to determine Oil spills at sea along with AIS data correlations to identify vessel responsible for the spill.
 
 ## Problem Statement:
 To facilitate detection of oil spills and also in identifying the polluting vessel using remote sensing satellite data, such as SAR and EO imagery and AIS data. 
