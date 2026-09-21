@@ -1,0 +1,1 @@
+// confidence -> hex, class -> icon
