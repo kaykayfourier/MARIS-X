@@ -1,0 +1,302 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #253642;
+  background-color: #e9e5dc;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  min-width: 100%;
+  background: #e9e5dc;
+}
+
+body {
+  min-height: 100vh;
+  background: #e9e5dc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+/* =========================================================
+   LEAFLET
+   ========================================================= */
+
+.leaflet-container {
+  background: #b7c9c5;
+  filter: saturate(0.78) contrast(1.04);
+}
+
+.leaflet-control-attribution {
+  background: rgba(245, 242, 233, 0.92) !important;
+  color: #475569 !important;
+}
+
+.leaflet-control-attribution a {
+  color: #334155 !important;
+}
+
+.leaflet-control-zoom {
+  border: 1px solid #aebdb8 !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  box-shadow: none !important;
+}
+
+.leaflet-control-zoom a {
+  background: #f5f2e9 !important;
+  color: #475569 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.leaflet-interactive:focus {
+  outline: none;
+}
+
+.marineeye-location-icon {
+  border: 0;
+  background: transparent;
+}
+
+.marineeye-location-pin {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border: 3px solid #ffffff;
+  border-radius: 50% 50% 50% 0;
+  background: #0f766e;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.35);
+  transform: rotate(-45deg);
+}
+
+.marineeye-location-pin::after {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 6px;
+  margin: 5px auto;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+/* =========================================================
+   GENERIC SLIDERS
+   ========================================================= */
+
+.slider-track::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #1f2937;
+  border: 2px solid #f8fafc;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.2);
+}
+
+.slider-track::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #1f2937;
+  border: 2px solid #f8fafc;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.2);
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* =========================================================
+   INVESTIGATION RANGE SLIDER
+   ========================================================= */
+
+.marineeye-range {
+  appearance: none;
+  height: 5px;
+  border-radius: 9999px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.marineeye-range::-webkit-slider-runnable-track {
+  background: transparent;
+}
+
+.marineeye-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.marineeye-range::-webkit-slider-thumb:active {
+  cursor: grabbing;
+}
+
+.marineeye-range::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.marineeye-range::-moz-range-track {
+  background: transparent;
+}
+
+.marineeye-range:focus {
+  outline: none;
+}
+
+/* =========================================================
+   MARIS-X DRIFT TIMELINE
+   ========================================================= */
+
+.marine-slider {
+  appearance: none;
+  height: 6px;
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+
+  background: linear-gradient(
+    to right,
+    #718a98 0%,
+    #e53935 25%,
+    #e3b341 50%,
+    #36a269 75%,
+    #2563eb 100%
+  );
+}
+
+.marine-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  border: 3px solid #ffffff;
+  background: #2f9c91;
+  box-shadow: 0 1px 5px rgba(35, 62, 65, 0.28);
+  cursor: grab;
+}
+
+.marine-slider::-webkit-slider-thumb:active {
+  cursor: grabbing;
+}
+
+.marine-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  border: 3px solid #ffffff;
+  background: #2f9c91;
+  box-shadow: 0 1px 5px rgba(35, 62, 65, 0.28);
+  cursor: grab;
+}
+
+.marine-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: transparent;
+}
+
+/* =========================================================
+   MAP TOOLTIPS
+   ========================================================= */
+
+.country-tooltip {
+  border: 1px solid rgba(88, 112, 117, 0.35) !important;
+  background: rgba(248, 246, 239, 0.92) !important;
+  color: #344b4e !important;
+  box-shadow: 0 4px 14px rgba(37, 54, 66, 0.12) !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+}
+
+/* =========================================================
+   MARIS-X DRIFT TOOLTIP
+   ========================================================= */
+
+.drift-tooltip {
+  border: 1px solid rgba(59, 78, 84, 0.28) !important;
+  border-radius: 8px !important;
+  background: rgba(248, 246, 239, 0.96) !important;
+  color: #344b4e !important;
+  box-shadow: 0 5px 18px rgba(37, 54, 66, 0.16) !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+}
+
+/* =========================================================
+   PRINTING
+   ========================================================= */
+
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  #marineeye-print-root,
+  #marineeye-print-root * {
+    visibility: visible !important;
+  }
+
+  #marineeye-print-root {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    min-height: 100% !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  #marineeye-print-root > div {
+    max-width: none !important;
+    min-height: auto !important;
+  }
+
+  #marineeye-print-root > div > div {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .marineeye-print-actions {
+    display: none !important;
+  }
+}
